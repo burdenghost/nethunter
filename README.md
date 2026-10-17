@@ -19,6 +19,18 @@ A Bash maintenance helper designed to be launched **from Termux** for an existin
 
 No extra Termux packages are required by the script itself. It uses Bash and the existing NetHunter launcher.
 
+## NetHunter proot symlink tool
+
+`nh-proot-symlinks.sh` is the NetHunter-specific tool for library symlink problems. It is launched from Termux but runs inside the installed Kali NetHunter proot via `nethunter -r`, so it inspects Kali paths rather than Termux paths.
+
+```bash
+chmod +x nh-proot-symlinks.sh
+./nh-proot-symlinks.sh          # read-only audit
+./nh-proot-symlinks.sh repair   # interactive repair; asks for each change
+```
+
+The repair mode only offers a candidate when a same-named existing file is found in a standard Kali library directory. This is a heuristic, not a guarantee of ABI compatibility; review each prompt carefully. It never blindly rewrites all library links, purges packages, or deletes PostgreSQL data. The package manager remains the preferred way to restore a missing or mismatched shared library.
+
 ## Usage
 
 From the repository directory in Termux:
