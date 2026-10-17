@@ -151,7 +151,10 @@ if [ "$MODE" = "repair" ]; then
   echo "This mode runs apt-get update, dpkg --configure -a, and apt-get -f install."
   echo "It does not purge packages or delete PostgreSQL data."
   printf 'Proceed with package-manager repair? Type YES to continue: '
-  read -r answer
+  if ! read -r answer </dev/tty; then
+    echo "No interactive terminal available; refusing to modify packages."
+    exit 1
+  fi
   if [ "$answer" != "YES" ]; then
     echo "Cancelled; no repair commands were run."
     exit 0
