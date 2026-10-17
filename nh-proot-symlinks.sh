@@ -78,7 +78,7 @@ else
   cat "$broken_file"
 fi
 
-if [ "$MODE" = repair" ]; then
+if [ "$MODE" = "repair" ]; then
   section "Interactive repair"
   echo "No library links will be changed automatically."
   echo "For each broken link, a replacement is offered only when a file with the same basename"
