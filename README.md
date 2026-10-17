@@ -1,69 +1,63 @@
-# NetHunter Repair & Diagnostics
+# NetHunter One-Stop Installer & Repair Toolkit
 
-A Bash maintenance helper designed to be launched **from Termux** for an existing Kali NetHunter Rootless installation. Termux is the control layer; package and service diagnostics run inside the Kali environment through the installed `nethunter` / `nh` launcher.
+A single Bash script for **Termux** that installs official Kali NetHunter Rootless when it is not already installed, then provides a menu to diagnose and repair common problems **inside the Kali proot environment**.
 
-## Features
+## One-line install and launch
 
-- Read-only checks for APT/dpkg health and incomplete package configuration
-- Basic dynamic-library checks for installed Metasploit/PostgreSQL binaries
-- PostgreSQL client, cluster, and readiness checks
-- Metasploit installation and database-helper checks
-- Optional, interactive APT repair using `apt-get update`, `dpkg --configure -a`, and `apt-get -f install`
-- No automatic package purges, database deletion, cluster recreation, or PostgreSQL data resets
-
-## Requirements
-
-- Termux
-- Kali NetHunter Rootless already installed and launchable as `nethunter` or `nh`
-- Internet connection for the optional repair mode
-
-No extra Termux packages are required by the script itself. It uses Bash and the existing NetHunter launcher.
-
-## NetHunter proot symlink tool
-
-`nh-proot-symlinks.sh` is the NetHunter-specific tool for library symlink problems. It is launched from Termux but runs inside the installed Kali NetHunter proot via `nethunter -r`, so it inspects Kali paths rather than Termux paths.
+Paste this into Termux:
 
 ```bash
-chmod +x nh-proot-symlinks.sh
-./nh-proot-symlinks.sh          # read-only audit
-./nh-proot-symlinks.sh repair   # interactive repair; asks for each change
+pkg install -y git && git clone https://github.com/burdenghost/nethunter.git && cd nethunter && chmod +x nethunter-toolkit.sh && ./nethunter-toolkit.sh
 ```
 
-The repair mode only offers a candidate when a same-named existing file is found in a standard Kali library directory. This is a heuristic, not a guarantee of ABI compatibility; review each prompt carefully. It never blindly rewrites all library links, purges packages, or deletes PostgreSQL data. The package manager remains the preferred way to restore a missing or mismatched shared library.
-
-## Usage
-
-From the repository directory in Termux:
+If you already cloned the repository, update and launch it with:
 
 ```bash
-chmod +x nh-repair.sh
-
-# Read-only diagnostics (default)
-./nh-repair.sh
-
-# Focused database and Metasploit diagnostics
-./nh-repair.sh db-check
-
-# Interactive package-manager repair
-./nh-repair.sh repair
+cd nethunter && git pull && chmod +x nethunter-toolkit.sh && ./nethunter-toolkit.sh
 ```
 
-The repair mode asks you to type `YES` before changing package state. Read the output and warnings; do not interrupt package configuration unless necessary.
+## What the script does
 
-## Important limitation
+1. Detects whether the `nethunter` / `nh` launcher already exists.
+2. If it is missing, installs minimal Termux prerequisites and downloads/runs the **official Kali NetHunter Rootless installer** from `https://offs.ec/2MceZWr`. The official installer remains interactive.
+3. Once NetHunter exists, opens a menu that runs checks and repair commands inside Kali via `nethunter -r`—not against Termux's own libraries.
 
-This script can diagnose general APT/dpkg dependency problems and attempt safe package-manager recovery. It cannot make unsupported features supported: Kali's official Rootless documentation lists Metasploit with database support as unavailable in NetHunter Rootless. PostgreSQL may be installed and running while Metasploit database integration remains unsupported in this edition.
+### Menu features
 
-- [Official NetHunter Rootless documentation](https://www.kali.org/docs/nethunter/nethunter-rootless/)
-- [Kali NetHunter overview and edition comparison](https://www.kali.org/docs/nethunter/)
+- **Diagnostics:** APT/dpkg state, free space, broken symlinks in common library directories, dynamic linker errors for installed Metasploit/PostgreSQL binaries, and PostgreSQL/Metasploit availability.
+- **APT/dpkg repair:** after you type `YES`, runs `apt-get update`, `dpkg --configure -a`, `apt-get -f install`, and an APT dependency check inside Kali.
+- **Database checks:** PostgreSQL cluster/readiness checks and Metasploit database-helper status.
+- **Library repair guidance:** helps identify the owning package so the correct library can be reinstalled rather than guessing a symlink target.
+- **NetHunter shell:** opens the installed Kali environment.
 
-## Safety notes
+## Command-line modes
 
-- Run diagnostics first and keep the output.
-- The repair mode can install/configure packages and therefore may change the Kali root filesystem.
-- The script does not remove PostgreSQL clusters, delete database files, purge packages, or run `full-upgrade` automatically.
-- It has not yet been executed against your live NetHunter installation; run diagnostics first and share the output if any errors remain.
+```bash
+./nethunter-toolkit.sh              # install if missing, then open menu
+./nethunter-toolkit.sh install      # install if missing, then open menu
+./nethunter-toolkit.sh diagnose     # read-only checks (installs first if missing)
+./nethunter-toolkit.sh repair       # interactive APT/dpkg repair
+./nethunter-toolkit.sh db-check     # PostgreSQL/Metasploit checks
+./nethunter-toolkit.sh --help
+```
+
+## Safety and limitations
+
+- The script skips installation if a NetHunter launcher is already present; it does not overwrite an existing root filesystem.
+- The repair mode requires explicit `YES` confirmation.
+- It does not run `full-upgrade`, purge packages, delete PostgreSQL data, recreate clusters, or create speculative library symlinks.
+- A same-named shared library is not necessarily ABI-compatible. Prefer identifying the package owner with `dpkg -S /path/to/library` and reinstalling that package.
+- **Rootless limitation:** Kali's official documentation lists Metasploit without database support for NetHunter Rootless. The toolkit can diagnose PostgreSQL and package state, but cannot enable a feature that the Rootless edition does not support.
+
+## Official references
+
+- [Kali NetHunter Rootless installation and usage](https://www.kali.org/docs/nethunter/nethunter-rootless/)
+- [NetHunter edition comparison](https://www.kali.org/docs/nethunter/)
+
+## Other scripts
+
+The repository retains `nh-repair.sh` and `nh-proot-symlinks.sh` as standalone legacy utilities. For the combined install-and-maintenance workflow, use `nethunter-toolkit.sh`.
 
 ## Version
 
-0.1.0 — initial Termux-focused diagnostics and conservative APT repair.
+1.0.0 — unified Termux installer and Kali proot diagnostics/repair menu.
